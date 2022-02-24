@@ -1,0 +1,77 @@
+1) dependencies:
+    a)connect-mongo:which wil  alow session to be stored in our databases...so that if we reset our server user downt get logged out...
+    b) express-session: to store session and cookies
+    c) express-handle-bars:Handlebars is popular for both back-end and front-end templating. For example, the popular front-end framework Ember uses Handlebars as the templating engine.
+    d) moment: to format data and time
+    e) node-mon: will continously check whether the server is running continously.......unlike in previouse cases where if i make any changes in app.js i need to restart the server...here just save it while the server is running and changes will be made while server is running.
+
+    "start": "cross-env NODE_ENV=production node app",
+    "dev": "cross-env NODE_ENV=development nodemon app"
+    now cross-env variable will create different environment variable for production and for development
+    if u add new global variables in config.env: u need to restart the server......
+
+
+2)Passport.js
+now i have implemented the same function but with little modification:
+      1) first we brought the access_Id and access_key from google's developers id 
+      2) Now stored the access_Id and access_key as global variables
+      3) now create a model or Schema for user....there add google_id as one of the attributes
+      4) now use the model in passport.js
+      5) Modify the below function
+      
+passport.use(new GoogleStrategy({
+    clientID: GOOGLE_CLIENT_ID,
+    clientSecret: GOOGLE_CLIENT_SECRET,
+    callbackURL: "http://www.example.com/auth/google/callback"
+  },
+  function(accessToken, refreshToken, profile, cb) {
+    User.findOrCreate({ googleId: profile.id }, function (err, user) {
+      return cb(err, user);
+    });
+  }
+));
+
+my function -->
+
+module.exports=function(passport){
+    passport.use(new GoogleStrategy({
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: '/auth/google/callback',
+    }, async(accessToken, refreshToken, profile, done)=>{
+        console.log(profile);
+
+    }))
+    passport.serializeUser((user, done) => {
+        done(null, user.id)
+      })
+    
+      passport.deserializeUser((id, done) => {
+        User.findById(id, (err, user) => done(err, user))
+      })
+}
+
+now async function is the callback function...so u need to an object matching woth data object in profile...
+
+
+
+3) 
+router.get('/google/callback',passport.authenticate('google',{failureRedirect:'/'}),(req,res)=>{
+    res.redirect('/dashboard');
+});
+    here, in the above route passport.authenticate is called with "google strategy", if failed failure redirect is mentioned and if pass...it will redirect to /dashboard
+
+
+
+
+
+
+
+VIEWS:
+  1) "{{> name_of_the_file}}" this is the syntax of inserting a particular html file into an another html file
+  2) Now in main.hbs i have used:
+  <script>
+        M.Sidenav.init(document.querySelector('.sidenav'));
+    </script>
+  for further understanding follow this link:
+  https://materializecss.com/sidenav.html
